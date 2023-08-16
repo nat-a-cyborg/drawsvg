@@ -54,15 +54,11 @@ class SyncedAnimationConfig:
 
     def extra_javascript(self, d, context):
         config = self._with_filled_defaults(d, context)
-        if self.show_playback_controls:
-            return [config.controls_js]
-        return []
+        return [config.controls_js] if self.show_playback_controls else []
 
     def extra_onload_js(self, d, context):
         config = self._with_filled_defaults(d, context)
-        if self.show_playback_controls:
-            return [config.controls_js_onload]
-        return []
+        return [config.controls_js_onload] if self.show_playback_controls else []
 
     def extra_drawing_elements(self, d, context):
         config = self._with_filled_defaults(d, context)
@@ -100,7 +96,7 @@ class SyncedAnimationConfig:
                 and hasattr(lcontext.element, 'animation_data')):
             args = dict(args)
             data = lcontext.element.animation_data
-            args.update(data.interpolate_at_time(self.freeze_frame_at))
+            args |= data.interpolate_at_time(self.freeze_frame_at)
         return args
 
 
@@ -155,20 +151,19 @@ class AnimatedAttributeTimeline:
         )
         values_str = ';'.join(map(str, values))
         if not key_times.startswith('0;'):
-            key_times = '0;' + key_times
-            values_str = f'{values[0]};' + values_str
+            key_times = f'0;{key_times}'
+            values_str = f'{values[0]};{values_str}'
         if not key_times.endswith(';1'):
-            key_times = key_times + ';1'
-            values_str = values_str + f';{values[-1]}'
+            key_times += ';1'
+            values_str += f';{values[-1]}'
         attrs = dict(
                 dur=dur_str,
                 values=values_str,
                 keyTimes=key_times,
                 repeatCount=repeat_count,
                 fill=fill)
-        attrs.update(self.animate_attrs or {})
-        anim = elements.Animate(self.name, **attrs)
-        return anim
+        attrs |= (self.animate_attrs or {})
+        return elements.Animate(self.name, **attrs)
 
 
 class AnimationHelperData:
@@ -211,7 +206,7 @@ class AnimationHelperData:
                     all_timelines[name] = inv_timeline
             # Invert -y - height
             y_attrs = None
-            if 'height' in all_timelines.keys():
+            if 'height' in all_timelines:
                 height_timeline = all_timelines['height']
                 htimes = height_timeline.times
                 hvalues = height_timeline.values
@@ -220,7 +215,7 @@ class AnimationHelperData:
                 height_timeline = None
                 htimes = [0]
                 hvalues = [lcontext.element.args.get('height', 0)]
-            if 'y' in all_timelines.keys():
+            if 'y' in all_timelines:
                 y_timeline = all_timelines['y']
                 ytimes = y_timeline.times
                 yvalues = y_timeline.values
@@ -346,7 +341,7 @@ def animate_text_sequence(container, times: List[float], values: List[str],
     for val, current_kw in zip(values, kwargs_list):
         kwargs = dict(text_kwargs)
         if current_kw is not None:
-            kwargs.update(current_kw)
+            kwargs |= current_kw
         new_elements.append(elements.Text(val, *text_args, **kwargs))
     animate_element_sequence(times, new_elements)
     container.extend(new_elements)

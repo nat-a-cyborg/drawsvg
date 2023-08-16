@@ -86,7 +86,7 @@ class Context:
                         elif name in 'aA':
                             if len(vals) >= 7:
                                 vals[6] = -vals[6]
-                                vals[4] = int(bool(not vals[4]))
+                                vals[4] = int(not vals[4])
                         else:
                             vals[1::2] = [-y for y in vals[1::2]]
                         val_str = ','.join(map(str, vals))
@@ -106,7 +106,6 @@ class Context:
                     args['stroke-dashoffset'] = offset
                 except KeyError: pass
                 except (TypeError, ValueError, IndexError):
-                    pass
                     raise
         return args
 
@@ -115,8 +114,7 @@ class Context:
         args['viewBox'] = self.override_view_box(args['viewBox'])
         onload_list = self.extra_onload_js(d)
         onload_list.extend(args.get('onload', '').split(';'))
-        onload = ';'.join(onload_list)
-        if onload:
+        if onload := ';'.join(onload_list):
             args['onload'] = onload
         self._write_tag_args(args, output_file)
 
@@ -130,11 +128,8 @@ class Context:
                     mapped_id = id_map[id(v)]
                 if mapped_id is None:
                     continue
-                if k == 'xlink:href':
-                    v = '#{}'.format(mapped_id)
-                else:
-                    v = 'url(#{})'.format(mapped_id)
-            output_file.write(' {}="{}"'.format(k,v))
+                v = f'#{mapped_id}' if k == 'xlink:href' else f'url(#{mapped_id})'
+            output_file.write(f' {k}="{v}"')
 
 
 @dataclasses.dataclass(frozen=True)
@@ -200,8 +195,7 @@ class DrawingBasicElement(DrawingElement):
         self._cached_extra_children_with_context = None
     def check_children_allowed(self):
         if not self.has_content:
-            raise RuntimeError(
-                    '{} does not support children'.format(type(self)))
+            raise RuntimeError(f'{type(self)} does not support children')
     def _extra_children_with_context_avoid_recompute(self, lcontext=None):
         if (self._cached_extra_children_with_context is not None
                 and self._cached_context == lcontext.context):
@@ -243,7 +237,7 @@ class DrawingBasicElement(DrawingElement):
             mapped_id = self.id
             if id_map is not None and id(self) in id_map:
                 mapped_id = id_map[id(self)]
-            output_file.write('<use xlink:href="#{}" />'.format(mapped_id))
+            output_file.write(f'<use xlink:href="#{mapped_id}" />')
             return
         output_file.write('<')
         output_file.write(self.TAG_NAME)
@@ -343,9 +337,9 @@ class DrawingParentElement(DrawingBasicElement):
             return
         if not hasattr(obj, 'write_svg_element'):
             elements = obj.to_drawables(**kwargs)
+        elif kwargs:
+            raise ValueError('unexpected kwargs')
         else:
-            if len(kwargs) > 0:
-                raise ValueError('unexpected kwargs')
             elements = obj
         if hasattr(elements, 'write_svg_element'):
             self.append(elements, z=z)

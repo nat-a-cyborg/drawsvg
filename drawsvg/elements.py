@@ -21,9 +21,7 @@ class NoElement(DrawingElement):
                           lcontext, force_dup=False):
         pass
     def __eq__(self, other):
-        if isinstance(other, type(self)):
-            return True
-        return False
+        return isinstance(other, type(self))
 
 class Group(DrawingParentElement):
     '''A group of drawing elements.
@@ -53,7 +51,7 @@ class Raw(DrawingElement):
     def get_svg_defs(self):
         return self.defs
     def check_children_allowed(self):
-        raise RuntimeError('{} does not support children'.format(type(self)))
+        raise RuntimeError(f'{type(self)} does not support children')
 
 class Use(DrawingBasicElement):
     '''A copy of another element, drawn at a given position
@@ -66,7 +64,7 @@ class Use(DrawingBasicElement):
     TAG_NAME = 'use'
     def __init__(self, other_elem, x, y, **kwargs):
         if isinstance(other_elem, str) and not other_elem.startswith('#'):
-            other_elem = '#' + other_elem
+            other_elem = f'#{other_elem}'
         super().__init__(xlink__href=other_elem, x=x, y=y, **kwargs)
 
 class Animate(DrawingBasicElement):
@@ -88,11 +86,18 @@ class Animate(DrawingBasicElement):
             values = None
             from_ = from_or_values
         if isinstance(other_elem, str) and not other_elem.startswith('#'):
-            other_elem = '#' + other_elem
-        args = dict(
-                attributeName=attributeName, dur=dur, begin=begin, from_=from_,
-                to=to, values=values)
-        args.update(kwargs)
+            other_elem = f'#{other_elem}'
+        args = (
+            dict(
+                attributeName=attributeName,
+                dur=dur,
+                begin=begin,
+                from_=from_,
+                to=to,
+                values=values,
+            )
+            | kwargs
+        )
         super().__init__(xlink__href=other_elem, **args)
 
     def get_svg_defs(self):
@@ -205,8 +210,7 @@ class Image(DrawingBasicElement):
                     mime_type = self.MIME_MAP[ext]
                 else:
                     mime_type = self.MIME_DEFAULT
-                    warnings.warn('Unknown image file type "{}"'.format(ext),
-                                  Warning)
+                    warnings.warn(f'Unknown image file type "{ext}"', Warning)
             if mime_type is None:
                 mime_type = self.MIME_DEFAULT
                 warnings.warn('Unspecified image type; assuming png', Warning)
@@ -215,10 +219,7 @@ class Image(DrawingBasicElement):
         if embed and data is None:
             with open(path, 'rb') as f:
                 data = f.read()
-        if not embed:
-            uri = path
-        else:
-            uri = url_encode.bytes_as_data_uri(data, mime=mime_type)
+        uri = path if not embed else url_encode.bytes_as_data_uri(data, mime=mime_type)
         super().__init__(x=x, y=y, width=width, height=height, xlink__href=uri,
                          **kwargs)
 
@@ -266,11 +267,10 @@ class Text(DrawingParentElement):
                 raise TypeError(
                         "__init__() missing required arguments: 'x' and 'y' "
                         "are required unless 'path' is specified")
-        else:
-            if x is not None or y is not None:
-                raise TypeError(
-                        "__init__() conflicting arguments: 'x' and 'y' "
-                        "should not be used when 'path' is specified")
+        elif x is not None or y is not None:
+            raise TypeError(
+                    "__init__() conflicting arguments: 'x' and 'y' "
+                    "should not be used when 'path' is specified")
         if path_args is None:
             path_args = {}
         if start_offset is not None:
@@ -281,8 +281,6 @@ class Text(DrawingParentElement):
 
         text, single_line = self._handle_text_argument(
                 text, force_multi=on_path)
-        num_lines = len(text)
-
         # Text alignment
         if center:
             kwargs.setdefault('text_anchor', 'middle')
@@ -290,6 +288,8 @@ class Text(DrawingParentElement):
                 kwargs.setdefault('dominant_baseline', 'central')
             else:
                 line_offset += 0.5
+            num_lines = len(text)
+
             line_offset -= line_height * (num_lines - 1) / 2
         # Text alignment on a path
         if on_path:
@@ -314,7 +314,7 @@ class Text(DrawingParentElement):
             if path is None:
                 # Text is an iterable
                 for i, line in enumerate(text):
-                    dy = '{}em'.format(line_offset if i == 0 else line_height)
+                    dy = f'{line_offset if i == 0 else line_height}em'
                     self.append_line(line, x=x, dy=dy, **tspan_args)
             else:
                 self._text_path = _TextPath(path, **path_args)
@@ -323,7 +323,7 @@ class Text(DrawingParentElement):
                 for i, line in enumerate(text):
                     if line is None or len(line) == 0:
                         continue
-                    dy = '{}em'.format(line_offset + i*line_height)
+                    dy = f'{line_offset + i * line_height}em'
                     tspan = TSpan(line, dy=dy, **tspan_args)
                     self._text_path.append(tspan)
                 self.append(self._text_path)
@@ -332,10 +332,7 @@ class Text(DrawingParentElement):
         # Handle multi-line text (contains '\n' or is a list of strings)
         if isinstance(text, str):
             single_line = '\n' not in text and not force_multi
-            if single_line:
-                text = (text,)
-            else:
-                text = tuple(text.splitlines())
+            text = (text, ) if single_line else tuple(text.splitlines())
         else:
             single_line = False
             text = tuple(text)
@@ -465,8 +462,8 @@ class Path(DrawingBasicElement):
         super().__init__(d=d, **kwargs)
     def append(self, command_str, *args):
         if len(self.args['d']) > 0:
-            command_str = ' ' + command_str
-        if len(args) > 0:
+            command_str = f' {command_str}'
+        if args:
             command_str = command_str + ','.join(map(str, args))
         self.args['d'] += command_str
         return self

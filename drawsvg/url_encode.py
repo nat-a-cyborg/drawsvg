@@ -29,13 +29,8 @@ def svg_as_utf8_data_uri(txt, unsafe_chars='"', strip_chars=STRIP_CHARS,
     '''
     unsafe_chars = (unsafe_chars or '') + '#&%'
     replacements = {
-        char: urllib.parse.quote(char, safe='')
-        for char in unsafe_chars
-    }
-    replacements.update({
-        char: ''
-        for char in strip_chars
-    })
+        char: urllib.parse.quote(char, safe='') for char in unsafe_chars
+    } | {char: '' for char in strip_chars}
     search = re.compile('|'.join(map(re.escape, replacements.keys())))
     data_safe = search.sub(lambda m: replacements[m.group(0)], txt)
     return f'data:{mime};utf8,{data_safe}'
