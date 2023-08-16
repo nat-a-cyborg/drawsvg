@@ -109,7 +109,7 @@ class Marker(DrawingDef):
         kwargs = {
             'markerWidth': width if scale == 1 else float(width) * scale,
             'markerHeight': height if scale == 1 else float(height) * scale,
-            'viewBox': '{} {} {} {}'.format(minx, miny, width, height),
+            'viewBox': f'{minx} {miny} {width} {height}',
             'orient': orient,
             **kwargs,
         }

@@ -108,9 +108,9 @@ class Drawing:
             return
         if not hasattr(obj, 'write_svg_element'):
             elements = obj.to_drawables(**kwargs)
+        elif kwargs:
+            raise ValueError('unexpected kwargs')
         else:
-            if len(kwargs) > 0:
-                raise ValueError('unexpected kwargs')
             elements = obj
         if hasattr(elements, 'write_svg_element'):
             self.append(elements, z=z)
@@ -147,9 +147,9 @@ class Drawing:
     def draw_def(self, obj, **kwargs):
         if not hasattr(obj, 'write_svg_element'):
             elements = obj.to_drawables(**kwargs)
+        elif kwargs:
+            raise ValueError('unexpected kwargs')
         else:
-            if len(kwargs) > 0:
-                raise ValueError('unexpected kwargs')
             elements = obj
         if hasattr(elements, 'write_svg_element'):
             self.append_def(elements)
@@ -248,8 +248,9 @@ class Drawing:
             id_str = f'{id_prefix}{base}{id_index}'
             id_index += 1
             return id_str
+
         id_map = defaultdict(id_gen)
-        prev_set = set((id(defn) for defn in self.other_defs))
+        prev_set = {id(defn) for defn in self.other_defs}
         prev_list = []
         def is_duplicate(obj):
             nonlocal prev_set
@@ -257,6 +258,7 @@ class Drawing:
             prev_set.add(id(obj))
             prev_list.append(obj)
             return dup
+
         for element in self.other_defs:
             if hasattr(element, 'write_svg_element'):
                 local = types.LocalContext(

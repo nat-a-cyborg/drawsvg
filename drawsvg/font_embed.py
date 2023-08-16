@@ -40,7 +40,7 @@ def download_google_font_css(family, text=None, display='swap', **kwargs):
         if not isinstance(text, str):
             text = ''.join(text)
         args['text'] = text
-    args.update(kwargs)
+    args |= kwargs
     params = urllib.parse.urlencode(args)
     url = f'https://fonts.googleapis.com/css?{params}'
     with urllib.request.urlopen(url) as r:

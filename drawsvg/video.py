@@ -41,7 +41,7 @@ class RasterVideo:
             file_type = mime_type.split('/')[-1]
         if to_file is None:
             # Create temp file for video
-            _file_handle = tempfile.NamedTemporaryFile(suffix='.'+file_type)
+            _file_handle = tempfile.NamedTemporaryFile(suffix=f'.{file_type}')
             to_file = _file_handle.name
         if video_args is None:
             video_args = {}
@@ -56,9 +56,7 @@ class RasterVideo:
                 video_file=to_file, _file_handle=_file_handle,
                 mime_type=mime_type)
     def _repr_png_(self):
-        if self.mime_type.startswith('image/'):
-            return self._as_bytes()
-        return None
+        return self._as_bytes() if self.mime_type.startswith('image/') else None
     def _repr_html_(self):
         data_uri = self.as_data_uri()
         if self.mime_type.startswith('video/'):
@@ -74,13 +72,12 @@ class RasterVideo:
     def _as_bytes(self):
         if self.video_data:
             return self.video_data
-        else:
-            try:
-                with open(self.video_file, 'rb') as f:
-                    return f.read()
-            except TypeError:
-                self.video_file.seek(0)
-                return self.video_file.read()
+        try:
+            with open(self.video_file, 'rb') as f:
+                return f.read()
+        except TypeError:
+            self.video_file.seek(0)
+            return self.video_file.read()
 
 
 def render_svg_frames(frames, align_bottom=False, align_right=False,
@@ -146,7 +143,7 @@ def save_video(frames, file, verbose=False, **kwargs):
     kwargs.pop('bg', None)
     if verbose:
         print()
-        print(f'Converting to video')
+        print('Converting to video')
     imageio.mimsave(file, frames, **kwargs)
 
 def render_spritesheet(frames, row_length=None, verbose=False, **kwargs):
@@ -188,8 +185,7 @@ def render_spritesheet(frames, row_length=None, verbose=False, **kwargs):
             [frame] for frame in frames[row*cols:next_row_end]
         ])
 
-    spritesheet = np.block(block_arrangement)
-    return spritesheet
+    return np.block(block_arrangement)
 
 def save_spritesheet(frames, file, row_length=None, verbose=False, **kwargs):
     '''

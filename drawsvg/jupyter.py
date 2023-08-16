@@ -26,7 +26,7 @@ class JupyterSvgImage(_Rasterizable):
     svg: str
     def _repr_html_(self):
         uri = url_encode.svg_as_utf8_data_uri(self.svg)
-        return '<img src="{}">'.format(uri)
+        return f'<img src="{uri}">'
 
 @dataclasses.dataclass
 class JupyterSvgFrame:

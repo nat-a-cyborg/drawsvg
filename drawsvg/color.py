@@ -28,9 +28,9 @@ class Srgb:
     def __iter__(self):
         return iter((self.r, self.g, self.b))
     def __repr__(self):
-        return 'RGB({}, {}, {})'.format(self.r, self.g, self.b)
+        return f'RGB({self.r}, {self.g}, {self.b})'
     def __str__(self):
-        return 'rgb({}%,{}%,{}%)'.format(self.r*100, self.g*100, self.b*100)
+        return f'rgb({self.r * 100}%,{self.g * 100}%,{self.b * 100}%)'
     def luma(self, wts=None):
         if wts is None: wts = self.LUMA_WEIGHTS
         rw, gw, bw = wts
@@ -53,11 +53,10 @@ class Hsl:
     def __iter__(self):
         return iter((self.h, self.s, self.l))
     def __repr__(self):
-        return 'HSL({}, {}, {})'.format(self.h, self.s, self.l)
+        return f'HSL({self.h}, {self.s}, {self.l})'
     def __str__(self):
         r, g, b = self.to_srgb()
-        return 'rgb({}%,{}%,{}%)'.format(
-                round(r*100, 2), round(g*100, 2), round(b*100, 2))
+        return f'rgb({round(r * 100, 2)}%,{round(g * 100, 2)}%,{round(b * 100, 2)}%)'
     def to_srgb(self):
         hs = Srgb.from_hue(self.h)
         c = (1 - abs(2 * self.l - 1)) * self.s
@@ -75,11 +74,10 @@ class Hsv:
     def __iter__(self):
         return iter((self.h, self.s, self.v))
     def __repr__(self):
-        return 'HSV({}, {}, {})'.format(self.h, self.s, self.v)
+        return f'HSV({self.h}, {self.s}, {self.v})'
     def __str__(self):
         r, g, b = self.to_srgb()
-        return 'rgb({}%,{}%,{}%)'.format(
-                round(r*100, 2), round(g*100, 2), round(b*100, 2))
+        return f'rgb({round(r * 100, 2)}%,{round(g * 100, 2)}%,{round(b * 100, 2)}%)'
     def to_srgb(self):
         hs = Srgb.from_hue(self.h)
         c = self.v * self.s
@@ -108,11 +106,10 @@ class Sin:
     def __iter__(self):
         return iter((self.h, self.s, self.l))
     def __repr__(self):
-        return 'Sin({}, {}, {})'.format(self.h, self.s, self.l)
+        return f'Sin({self.h}, {self.s}, {self.l})'
     def __str__(self):
         r, g, b = self.to_srgb()
-        return 'rgb({}%,{}%,{}%)'.format(
-                round(r*100, 2), round(g*100, 2), round(b*100, 2))
+        return f'rgb({round(r * 100, 2)}%,{round(g * 100, 2)}%,{round(b * 100, 2)}%)'
     def to_srgb(self):
         h = self.h
         scale = self.s / 2
@@ -132,10 +129,10 @@ class Hcy:
     def __iter__(self):
         return iter((self.h, self.c, self.y))
     def __repr__(self):
-        return 'HCY({}, {}, {})'.format(self.h, self.c, self.y)
+        return f'HCY({self.h}, {self.c}, {self.y})'
     def __str__(self):
         r, g, b = self.to_srgb()
-        return 'rgb({}%,{}%,{}%)'.format(r*100, g*100, b*100)
+        return f'rgb({r * 100}%,{g * 100}%,{b * 100}%)'
     def to_srgb(self):
         hs = Srgb.from_hue(self.h)
         y = hs.luma(wts=self.HCY_WEIGHTS)
@@ -155,10 +152,7 @@ class Hcy:
             p = (srgb.b, srgb.g, -1., 2./3.)
         else:
             p = (srgb.g, srgb.b, 0., -1./3.)
-        if srgb.r < p[0]:
-            q = (p[0], p[1], p[3], srgb.r)
-        else:
-            q = (srgb.r, p[1], p[2], p[0])
+        q = (p[0], p[1], p[3], srgb.r) if srgb.r < p[0] else (srgb.r, p[1], p[2], p[0])
         c = q[0] - min(q[3], q[1])
         h = abs((q[3] - q[1]) / (6*c + 1e-10) + q[2])
         return (h, c, q[0])
@@ -184,11 +178,10 @@ class Cielab:
     def __iter__(self):
         return iter((self.l, self.a, self.b))
     def __repr__(self):
-        return 'CIELAB({}, {}, {})'.format(self.l, self.a, self.b)
+        return f'CIELAB({self.l}, {self.a}, {self.b})'
     def __str__(self):
         r, g, b = self.to_srgb()
-        return 'rgb({}%,{}%,{}%)'.format(
-                round(r*100, 2), round(g*100, 2), round(b*100, 2))
+        return f'rgb({round(r * 100, 2)}%,{round(g * 100, 2)}%,{round(b * 100, 2)}%)'
     def to_srgb(self):
         in_arr = np.array((self.l, self.a, self.b))
         xyz = pwkit.colormaps.cielab_to_xyz(in_arr, self.REF_WHITE)
